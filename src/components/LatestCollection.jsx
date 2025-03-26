@@ -1,20 +1,18 @@
 import React, { useContext, useEffect, useState } from "react";
-import { ShopContext } from "./../context/ShopContext";
+import { ShopContext } from "../context/ShopContext";
 import ProductItem from "./ProductItem";
 import Title from "./Title";
 
 const LatestCollection = () => {
-  const { products, loading, error, refreshProducts } = useContext(ShopContext);
+  const { products, loading, error, refreshProducts, currency } = useContext(ShopContext);
   const [latestProducts, setLatestProducts] = useState([]);
 
   // useEffect là một Hook trong React, được dùng để chạy một đoạn code khi
   // component được render hoặc khi có sự thay đổi ở dependencies.
   // Thêm products vào dependency array để cập nhật khi products thay đổi
   useEffect(() => {
-    // Hàm này lấy 10 sản phẩm đầu tiên từ products và lưu vào state latestProducts.
-    //products.slice(0,10) tạo một mảng mới gồm 10 phần tử đầu tiên của products.
     if (products && products.length > 0) {
-      setLatestProducts(products.slice(0, 10));
+      setLatestProducts(products.slice(0, 8));
     }
   }, [products]);
 
@@ -59,15 +57,9 @@ const LatestCollection = () => {
       )}
 
       {!loading && !error && latestProducts.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-col-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
-          {latestProducts.map((item, index) => (
-            <ProductItem 
-              key={index} 
-              id={item._id} 
-              image={item.image} 
-              name={item.name} 
-              price={item.price} 
-            />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {latestProducts.map((product) => (
+            <ProductItem key={product._id} data={product} />
           ))}
         </div>
       )}

@@ -1,13 +1,46 @@
-
-import { assets } from "./../assets/assets";
-import { NavLink } from "react-router";
-import { Link } from "react-router";
-import React, { useContext } from "react";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
+import { assets } from "./../assets/assets";
+
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
-  const {setShowSearch} = useContext(ShopContext)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const {setShowSearch, getCartCount} = useContext(ShopContext)
+  const navigate = useNavigate();
+
+  // Check authentication status when component mounts and when localStorage changes
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      setIsLoggedIn(!!token);
+    };
+    
+    // Initial check
+    checkAuth();
+    
+    // Add event listener for storage changes (for multi-tab functionality)
+    window.addEventListener('storage', checkAuth);
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+    };
+  }, []);
+
+  // Handle user icon click
+  const handleUserClick = () => {
+    if (!isLoggedIn) {
+      navigate('/login');
+    }
+  }
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    navigate('/');
+  }
 
   return (
     <div className="flex items-center justify-between py-5 font-medium">
@@ -34,12 +67,18 @@ const Navbar = () => {
       <div className="flex items-center gap-6">
         <img src={assets.search_icon} onClick={() => setShowSearch(true)} className="w-5 cursor-pointer"></img>
         <div className="group relative">
-          <img src={assets.profile_icon} className="w-5 cursor-pointer"></img>
+          <img src={assets.profile_icon} onClick={handleUserClick} className="w-5 cursor-pointer"></img>
           <div className="group-hover:block hidden absolute dropdown-menu right-0 pt-4">
             <div className="flex flex-col gap-2 w-36 py-3 px-5 bg-slate-100 text-gray-500 rounded">
-              <p className="cursor-pointer hover:text-black">My profile</p>
-              <p className="cursor-pointer hover:text-black">Orders</p>
-              <p className="cursor-pointer hover:text-black">Logout</p>
+              {isLoggedIn ? (
+                <>
+                  <Link to="/profile" className="cursor-pointer hover:text-black">My Account</Link>
+                  <Link to="/orders" className="cursor-pointer hover:text-black">Orders</Link>
+                  <p onClick={handleLogout} className="cursor-pointer hover:text-black">Logout</p>
+                </>
+              ) : (
+                <Link to="/login" className="cursor-pointer hover:text-black">Login</Link>
+              )}
             </div>
           </div>
         </div>
@@ -48,7 +87,7 @@ const Navbar = () => {
           {/* w-5 => chieu rong 5, min-w-5 => khi thu nho k dc nho qua 5 */}
           <img src={assets.cart_icon} className="w-5 min-w-5"></img>
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">
-            10
+            {getCartCount()}
           </p>
         </Link>
         <img
