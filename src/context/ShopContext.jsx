@@ -23,43 +23,43 @@ const ShopContextProvider = (props) => {
     
     try {
       const apiUrl = `${backendUrl}/api/products/list`;
-      console.log("Đang gọi API với URL:", apiUrl);
+      console.log("Calling API with URL:", apiUrl);
       
       const response = await axios.get(apiUrl);
-      console.log("Response đầy đủ:", response);
+      console.log("Full response:", response);
       
       if (!response || !response.data) {
-        console.error("Phản hồi không có dữ liệu:", response);
-        setError("Không nhận được dữ liệu từ server");
-        toast.error("Không nhận được dữ liệu từ server");
+        console.error("Response has no data:", response);
+        setError("No data received from server");
+        toast.error("No data received from server");
         setProducts([]);
         return;
       }
       
-      console.log("Dữ liệu từ API:", response.data);
+      console.log("Data from API:", response.data);
       
       if (response.data.success === true) {
         if (Array.isArray(response.data.products)) {
-          console.log("Danh sách sản phẩm:", response.data.products);
+          console.log("Product list:", response.data.products);
           
           const processedProducts = response.data.products.map(product => {
             if (!product) return null;
             
             const processedProduct = { ...product };
             
-            // Nếu không có _id, sử dụng tên sản phẩm làm ID
+            // If no _id, use product name as ID
             if (!processedProduct._id) {
               processedProduct._id = processedProduct.name.toLowerCase().replace(/\s+/g, '-');
             }
             
-            // Đảm bảo có thuộc tính image là mảng
+            // Ensure image is an array
             if (!processedProduct.image) {
               processedProduct.image = [];
             } else if (!Array.isArray(processedProduct.image)) {
               processedProduct.image = [processedProduct.image];
             }
             
-            // Đảm bảo có thuộc tính sizes là mảng
+            // Ensure sizes is an array
             if (!processedProduct.sizes) {
               processedProduct.sizes = ["S", "M", "L", "XL"];
             } else if (!Array.isArray(processedProduct.sizes)) {
@@ -70,52 +70,52 @@ const ShopContextProvider = (props) => {
           })
           .filter(product => product !== null);
           
-          console.log("Danh sách sản phẩm đã xử lý:", processedProducts);
+          console.log("Processed product list:", processedProducts);
           setProducts(processedProducts);
         } else {
-          console.error("products không phải là mảng:", response.data.products);
-          setError("Dữ liệu sản phẩm không hợp lệ");
-          toast.error("Dữ liệu sản phẩm không hợp lệ");
+          console.error("products is not an array:", response.data.products);
+          setError("Invalid product data");
+          toast.error("Invalid product data");
           setProducts([]);
         }
       } else {
-        console.error("API trả về lỗi:", response.data);
-        setError(response.data.message || "Không thể lấy dữ liệu sản phẩm");
-        toast.error(response.data.message || "Không thể lấy dữ liệu sản phẩm");
+        console.error("API returned error:", response.data);
+        setError(response.data.message || "Could not fetch product data");
+        toast.error(response.data.message || "Could not fetch product data");
         setProducts([]);
       }
     } catch (error) {
-      console.error("Lỗi khi gọi API:", error);
+      console.error("Error calling API:", error);
       
       if (error.response) {
-        console.error("Lỗi phản hồi:", error.response.data);
-        console.error("Mã trạng thái:", error.response.status);
-        setError(`Lỗi server: ${error.response.status} - ${error.response.data?.message || "Lỗi không xác định"}`);
+        console.error("Response error:", error.response.data);
+        console.error("Status code:", error.response.status);
+        setError(`Server error: ${error.response.status} - ${error.response.data?.message || "Unknown error"}`);
       } else if (error.request) {
-        console.error("Không nhận được phản hồi:", error.request);
-        setError("Không thể kết nối đến server. Vui lòng kiểm tra kết nối của bạn.");
+        console.error("No response received:", error.request);
+        setError("Could not connect to server. Please check your connection.");
       } else {
-        console.error("Lỗi:", error.message);
-        setError(`Lỗi: ${error.message}`);
+        console.error("Error:", error.message);
+        setError(`Error: ${error.message}`);
       }
       
-      toast.error("Lỗi kết nối đến server");
+      toast.error("Error connecting to server");
       setProducts([]);
     } finally {
       setLoading(false);
     }
   }
 
-  // Hàm mới để lấy ID thực từ database khi tạo đơn hàng
+  // Function to get real product ID from database when creating order
   const getRealProductId = async (productName) => {
     try {
       const response = await axios.get(`${backendUrl}/api/products/name/${productName}`);
       if (response.data.success && response.data.product) {
         return response.data.product._id;
       }
-      throw new Error("Không tìm thấy sản phẩm");
+      throw new Error("Product not found");
     } catch (error) {
-      console.error("Lỗi khi lấy ID sản phẩm:", error);
+      console.error("Error getting product ID:", error);
       throw error;
     }
   }
@@ -194,39 +194,39 @@ const ShopContextProvider = (props) => {
 
   const addToCart = async(itemId, size) => {
     if(!itemId) {
-      console.error("ID sản phẩm không hợp lệ:", itemId);
-      toast.error('ID sản phẩm không hợp lệ');
+      console.error("Invalid product ID:", itemId);
+      toast.error('Invalid product ID');
       return;
     }
     
     if(!size){
-      toast.error('Vui lòng chọn kích thước');
+      toast.error('Please select a size');
       return;
     }
     
     try {
-      // Thử tìm sản phẩm trong state hiện tại
+      // Try to find product in current state
       let product = products.find(p => p._id === itemId);
       
-      // Nếu không tìm thấy trong state, gọi API để lấy thông tin sản phẩm
+      // If not found in state, call API to get product info
       if (!product) {
-        console.log("Không tìm thấy sản phẩm trong state, đang gọi API...");
+        console.log("Product not found in state, calling API...");
         const response = await axios.get(`${backendUrl}/api/products/${itemId}`);
         if (response.data.success && response.data.product) {
           product = response.data.product;
         } else {
-          throw new Error("Không tìm thấy sản phẩm");
+          throw new Error("Product not found");
         }
       }
       
-      console.log("Sản phẩm tìm thấy để thêm vào giỏ hàng:", product);
+      console.log("Product found to add to cart:", product);
       
       let cartData = structuredClone(cartItems);
       const cartItemKey = itemId;
       
       if (!cartData[cartItemKey]) {
         cartData[cartItemKey] = {
-          product: product, // Lưu toàn bộ thông tin sản phẩm
+          product: product,
           sizes: {}
         };
       }
@@ -237,13 +237,13 @@ const ShopContextProvider = (props) => {
       
       cartData[cartItemKey].sizes[size] += 1;
       
-      console.log("Thêm vào giỏ hàng:", cartItemKey, size, cartData);
+      console.log("Adding to cart:", cartItemKey, size, cartData);
       setCartItems(cartData);
-      toast.success('Đã thêm vào giỏ hàng');
+      toast.success('Added to cart');
       
     } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
-      toast.error('Không thể thêm sản phẩm vào giỏ hàng');
+      console.error("Error adding to cart:", error);
+      toast.error('Could not add product to cart');
     }
   }
 
@@ -270,11 +270,11 @@ const ShopContextProvider = (props) => {
     try {
       let cartData = structuredClone(cartItems);
       
-      // Kiểm tra xem item có tồn tại không
+      // Check if item exists
       if (!cartData[itemId]) {
         const product = products.find(p => p._id === itemId);
         if (!product) {
-          throw new Error("Không tìm thấy sản phẩm");
+          throw new Error("Product not found");
         }
         cartData[itemId] = {
           product: product,
@@ -282,7 +282,7 @@ const ShopContextProvider = (props) => {
         };
       }
       
-      // Kiểm tra và cập nhật sizes
+      // Check and update sizes
       if (!cartData[itemId].sizes) {
         cartData[itemId].sizes = {};
       }
@@ -291,8 +291,8 @@ const ShopContextProvider = (props) => {
       setCartItems(cartData);
       
     } catch (error) {
-      console.error("Lỗi khi cập nhật số lượng:", error);
-      toast.error("Không thể cập nhật số lượng sản phẩm");
+      console.error("Error updating quantity:", error);
+      toast.error("Could not update product quantity");
     }
   }
 

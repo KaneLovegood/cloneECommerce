@@ -29,7 +29,7 @@ const PlaceOrder = () => {
         const amount = await getCartAmount();
         setCartAmount(amount);
       } catch (error) {
-        console.error("Lỗi khi tính tổng giỏ hàng:", error);
+        console.error("Error calculating cart total:", error);
         setCartAmount(0);
       }
     };
@@ -48,45 +48,45 @@ const PlaceOrder = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Kiểm tra form
+    // Form validation
     const requiredFields = ['fullName', 'email', 'phone', 'address', 'city', 'state', 'country', 'cardNumber', 'cardName', 'expiryDate', 'cvv'];
     const emptyFields = requiredFields.filter(field => !formData[field]);
     
     if (emptyFields.length > 0) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    // Kiểm tra giỏ hàng
+    // Check cart
     if (Object.keys(cartItems).length === 0) {
-      toast.error('Giỏ hàng trống');
+      toast.error('Cart is empty');
       return;
     }
     
-    // Xử lý thanh toán
+    // Process payment
     setLoading(true);
     
     try {
-      // Lấy token từ localStorage
+      // Get token from localStorage
       const token = localStorage.getItem('token');
       if (!token) {
-        toast.error('Vui lòng đăng nhập để đặt hàng');
+        toast.error('Please login to place order');
         return;
       }
 
-      // Chuẩn bị dữ liệu đơn hàng
+      // Prepare order data
       const orderProducts = [];
       
-      // Xử lý từng sản phẩm trong giỏ hàng
+      // Process each product in cart
       for (const [productId, itemData] of Object.entries(cartItems)) {
         if (!itemData || !itemData.product || !itemData.sizes) {
-          console.error("Dữ liệu sản phẩm không hợp lệ:", productId, itemData);
+          console.error("Invalid product data:", productId, itemData);
           continue;
         }
 
         const product = itemData.product;
         
-        // Xử lý từng size của sản phẩm
+        // Process each size of the product
         for (const [size, quantity] of Object.entries(itemData.sizes)) {
           if (quantity > 0) {
             orderProducts.push({
@@ -102,10 +102,10 @@ const PlaceOrder = () => {
       }
 
       if (orderProducts.length === 0) {
-        throw new Error('Không có sản phẩm nào trong giỏ hàng');
+        throw new Error('No products in cart');
       }
 
-      // Tạo đơn hàng theo cấu trúc API yêu cầu
+      // Create order data according to API requirements
       const orderData = {
         products: orderProducts,
         address: {
@@ -122,9 +122,9 @@ const PlaceOrder = () => {
         totalAmount: cartAmount + delivery_fee
       };
 
-      console.log("Dữ liệu đơn hàng gửi đi:", orderData);
+      console.log("Order data being sent:", orderData);
 
-      // Gọi API tạo đơn hàng
+      // Call API to create order
       const response = await axios.post(
         `${backendUrl}/api/order/create`,
         orderData,
@@ -136,19 +136,19 @@ const PlaceOrder = () => {
         }
       );
 
-      console.log("Phản hồi từ server:", response.data);
+      console.log("Server response:", response.data);
 
       if (response.data.success) {
-        // Xóa giỏ hàng sau khi đặt hàng thành công
+        // Clear cart after successful order
         localStorage.removeItem('cartItems');
         setShowSuccessModal(true);
-        toast.success('Đặt hàng thành công!');
+        toast.success('Order placed successfully!');
       } else {
-        throw new Error(response.data.message || 'Lỗi khi tạo đơn hàng');
+        throw new Error(response.data.message || 'Error creating order');
       }
     } catch (error) {
-      console.error('Lỗi khi xử lý đơn hàng:', error);
-      toast.error(error.response?.data?.message || error.message || 'Không thể tạo đơn hàng. Vui lòng thử lại sau.');
+      console.error('Error processing order:', error);
+      toast.error(error.response?.data?.message || error.message || 'Unable to create order. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -156,17 +156,17 @@ const PlaceOrder = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Thông tin đặt hàng</h1>
+      <h1 className="text-2xl font-bold mb-6">Order Information</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Thông tin cá nhân */}
+        {/* Personal Information */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
+          <h2 className="text-xl font-semibold">Personal Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input
               type="text"
               name="fullName"
-              placeholder="Họ và tên *"
+              placeholder="Full Name *"
               value={formData.fullName}
               onChange={handleInputChange}
               className="border p-2 rounded"
@@ -182,7 +182,7 @@ const PlaceOrder = () => {
             <input
               type="tel"
               name="phone"
-              placeholder="Số điện thoại *"
+              placeholder="Phone Number *"
               value={formData.phone}
               onChange={handleInputChange}
               className="border p-2 rounded"
@@ -190,14 +190,14 @@ const PlaceOrder = () => {
           </div>
         </div>
 
-        {/* Địa chỉ giao hàng */}
+        {/* Shipping Address */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Địa chỉ giao hàng</h2>
+          <h2 className="text-xl font-semibold">Shipping Address</h2>
           <div className="grid grid-cols-1 gap-4">
             <input
               type="text"
               name="address"
-              placeholder="Địa chỉ *"
+              placeholder="Address *"
               value={formData.address}
               onChange={handleInputChange}
               className="border p-2 rounded"
@@ -206,7 +206,7 @@ const PlaceOrder = () => {
               <input
                 type="text"
                 name="city"
-                placeholder="Thành phố *"
+                placeholder="City *"
                 value={formData.city}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
@@ -214,7 +214,7 @@ const PlaceOrder = () => {
               <input
                 type="text"
                 name="state"
-                placeholder="Tỉnh/Thành phố *"
+                placeholder="State/Province *"
                 value={formData.state}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
@@ -222,7 +222,7 @@ const PlaceOrder = () => {
               <input
                 type="text"
                 name="postalCode"
-                placeholder="Mã bưu điện *"
+                placeholder="Postal Code *"
                 value={formData.postalCode}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
@@ -230,7 +230,7 @@ const PlaceOrder = () => {
               <input
                 type="text"
                 name="country"
-                placeholder="Quốc gia *"
+                placeholder="Country *"
                 value={formData.country}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
@@ -239,14 +239,14 @@ const PlaceOrder = () => {
           </div>
         </div>
 
-        {/* Thông tin thanh toán */}
+        {/* Payment Information */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Thông tin thanh toán</h2>
+          <h2 className="text-xl font-semibold">Payment Information</h2>
           <div className="grid grid-cols-1 gap-4">
             <input
               type="text"
               name="cardNumber"
-              placeholder="Số thẻ *"
+              placeholder="Card Number *"
               value={formData.cardNumber}
               onChange={handleInputChange}
               className="border p-2 rounded"
@@ -254,7 +254,7 @@ const PlaceOrder = () => {
             <input
               type="text"
               name="cardName"
-              placeholder="Tên chủ thẻ *"
+              placeholder="Cardholder Name *"
               value={formData.cardName}
               onChange={handleInputChange}
               className="border p-2 rounded"
@@ -263,7 +263,7 @@ const PlaceOrder = () => {
               <input
                 type="text"
                 name="expiryDate"
-                placeholder="Ngày hết hạn (MM/YY) *"
+                placeholder="Expiry Date (MM/YY) *"
                 value={formData.expiryDate}
                 onChange={handleInputChange}
                 className="border p-2 rounded"
@@ -280,38 +280,38 @@ const PlaceOrder = () => {
           </div>
         </div>
 
-        {/* Tổng tiền */}
+        {/* Order Summary */}
         <div className="border-t pt-4">
           <div className="flex justify-between items-center mb-2">
-            <span>Tổng tiền hàng:</span>
+            <span>Subtotal:</span>
             <span>{currency}{cartAmount}.00</span>
           </div>
           <div className="flex justify-between items-center mb-2">
-            <span>Phí vận chuyển:</span>
+            <span>Shipping Fee:</span>
             <span>{currency}{delivery_fee}.00</span>
           </div>
           <div className="flex justify-between items-center font-bold">
-            <span>Tổng thanh toán:</span>
+            <span>Total:</span>
             <span>{currency}{cartAmount + delivery_fee}.00</span>
           </div>
         </div>
 
-        {/* Nút đặt hàng */}
+        {/* Order Button */}
         <button
           type="submit"
           disabled={loading}
           className="w-full bg-black text-white py-3 rounded hover:bg-gray-800 disabled:bg-gray-400"
         >
-          {loading ? 'Đang xử lý...' : 'Đặt hàng'}
+          {loading ? 'Processing...' : 'Place Order'}
         </button>
       </form>
 
-      {/* Modal thông báo thành công */}
+      {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg max-w-md w-full">
-            <h2 className="text-2xl font-bold mb-4">Đặt hàng thành công!</h2>
-            <p className="mb-6">Cảm ơn bạn đã mua hàng. Chúng tôi sẽ sớm liên hệ với bạn.</p>
+            <h2 className="text-2xl font-bold mb-4">Order Placed Successfully!</h2>
+            <p className="mb-6">Thank you for your purchase. We will contact you soon.</p>
             <button
               onClick={() => {
                 setShowSuccessModal(false);
@@ -319,7 +319,7 @@ const PlaceOrder = () => {
               }}
               className="w-full bg-black text-white py-2 rounded hover:bg-gray-800"
             >
-              Tiếp tục mua sắm
+              Continue Shopping
             </button>
           </div>
         </div>

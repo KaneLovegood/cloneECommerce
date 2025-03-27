@@ -78,7 +78,7 @@ const Collection = () => {
           onClick={() => setShowFilter(!showFilter)}
           className="my-2 text-xl flex items-center cursor-pointer gap-2"
         >
-          BỘ LỌC
+          FILTER
         </p>
         <img
           className={`h-3 sm:hidden ${showFilter ? "rotate-90" : ""}`}
@@ -92,7 +92,7 @@ const Collection = () => {
             showFilter ? "" : "hidden"
           } sm:block`}
         >
-          <p className="mb-3 text-sm font-medium">DANH MỤC</p>
+          <p className="mb-3 text-sm font-medium">CATEGORY</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
             <p className="flex gap-2">
               <input
@@ -101,7 +101,7 @@ const Collection = () => {
                 value="Men"
                 onChange={toggleCategory}
               />
-              Nam
+              Men
             </p>
             <p className="flex gap-2">
               <input
@@ -110,7 +110,7 @@ const Collection = () => {
                 value="Women"
                 onChange={toggleCategory}
               />
-              Nữ
+              Women
             </p>
             <p className="flex gap-2">
               <input
@@ -119,7 +119,7 @@ const Collection = () => {
                 value="Kids"
                 onChange={toggleCategory}
               />
-              Trẻ em
+              Kids
             </p>
           </div>
         </div>
@@ -130,7 +130,7 @@ const Collection = () => {
             showFilter ? "" : "hidden"
           } sm:block`}
         >
-          <p className="mb-3 text-sm font-medium">LOẠI SẢN PHẨM</p>
+          <p className="mb-3 text-sm font-medium">PRODUCT TYPE</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
             <p className="flex gap-2">
               <input
@@ -139,7 +139,7 @@ const Collection = () => {
                 value="Topwear"
                 onChange={toggleSubCategory}
               />
-              Áo
+              Tops
             </p>
             <p className="flex gap-2">
               <input
@@ -148,7 +148,7 @@ const Collection = () => {
                 value="Bottomwear"
                 onChange={toggleSubCategory}
               />
-              Quần
+              Bottoms
             </p>
             <p className="flex gap-2">
               <input
@@ -157,7 +157,7 @@ const Collection = () => {
                 value="Winterwear"
                 onChange={toggleSubCategory}
               />
-              Đồ mùa đông
+              Winter Wear
             </p>
           </div>
         </div>
@@ -166,7 +166,7 @@ const Collection = () => {
       {/* Right side */}
       <div className="flex-1">
         <div className="flex justify-between text-base sm:text-2xl mb-4">
-          <Title text1={"TẤT CẢ"} text2={"SẢN PHẨM"} />
+          <Title text1={"ALL"} text2={"PRODUCTS"} />
 
           {/* Product Sort */}
           <select 
@@ -174,9 +174,9 @@ const Collection = () => {
             className="border-2 border-gray-300 text-sm px-2"
             value={sortType}
           >
-            <option value="relevant">Sắp xếp: Phù hợp nhất</option>
-            <option value="low-high">Sắp xếp: Giá thấp đến cao</option>
-            <option value="high-low">Sắp xếp: Giá cao đến thấp</option>
+            <option value="relevant">Sort: Most Relevant</option>
+            <option value="low-high">Sort: Price Low to High</option>
+            <option value="high-low">Sort: Price High to Low</option>
           </select>
         </div>
 
@@ -184,22 +184,22 @@ const Collection = () => {
         {loading && (
           <div className="text-center py-10">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Đang tải...</span>
+              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
             </div>
-            <p className="mt-2">Đang tải sản phẩm...</p>
+            <p className="mt-2">Loading products...</p>
           </div>
         )}
 
         {/* Error State */}
         {error && !loading && (
           <div className="text-center py-10 text-red-500">
-            <p className="mb-2">Có lỗi xảy ra khi tải sản phẩm:</p>
+            <p className="mb-2">Error loading products:</p>
             <p>{error}</p>
             <button 
               onClick={refreshProducts}
               className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
-              Thử lại
+              Try Again
             </button>
           </div>
         )}
@@ -209,7 +209,7 @@ const Collection = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
             {filterProducts.length === 0 ? (
               <div className="col-span-full text-center py-10">
-                <p>Không tìm thấy sản phẩm phù hợp</p>
+                <p>No products found</p>
               </div>
             ) : (
               filterProducts.map((item) => (

@@ -25,26 +25,26 @@ const LatestCollection = () => {
         </p>
       </div>
 
-      {/* Hiển thị trạng thái loading */}
+      {/* Loading State */}
       {loading && (
         <div className="text-center py-10">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
-            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Đang tải...</span>
+            <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
           </div>
-          <p className="mt-2">Đang tải sản phẩm...</p>
+          <p className="mt-2">Loading products...</p>
         </div>
       )}
 
-      {/* Hiển thị lỗi nếu có */}
+      {/* Error State */}
       {error && !loading && (
         <div className="text-center py-10 text-red-500">
-          <p className="mb-2">Có lỗi xảy ra khi tải sản phẩm:</p>
+          <p className="mb-2">Error loading products:</p>
           <p>{error}</p>
           <button 
             onClick={refreshProducts}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Thử lại
+            Try Again
           </button>
         </div>
       )}
@@ -52,7 +52,7 @@ const LatestCollection = () => {
       {/* Rendering products */}
       {!loading && !error && latestProducts.length === 0 && (
         <div className="text-center py-10">
-          <p>Không có sản phẩm nào trong bộ sưu tập mới nhất.</p>
+          <p>No products in latest collection.</p>
         </div>
       )}
 

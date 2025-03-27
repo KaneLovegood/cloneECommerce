@@ -8,20 +8,19 @@ import { ShopContext } from '../context/ShopContext';
 const Product = () => {
   const {productId} = useParams();
   
-  console.log('Params chi tiết:', productId);
+  console.log('Product details params:', productId);
   
   const {products, currency, addToCart, loading} = useContext(ShopContext);
   const [productData, setProductData] = useState(null);
   const [image, setImage] = useState('');
   const [size, setSize] = useState('');
 
-  // Thêm console.log để debug routing
+  // Add console.log for debugging routing
   console.log('Current URL:', window.location.pathname);
-  console.log( 'ProductID:', productId);
+  console.log('ProductID:', productId);
 
   const findProduct = () => {
-
-    // Tìm sản phẩm theo ID sử dụng chỉ danh sách sản phẩm thật
+    // Find product by ID using only real product list
     const foundProduct = products.find((item) => item._id === productId );
       
     setProductData(foundProduct);
@@ -35,7 +34,7 @@ const Product = () => {
     findProduct();
   }, [productId, products]);
 
-  // Thêm useEffect mới để scroll về đầu trang
+  // New useEffect to scroll to top
   useEffect(() => {
     window.scrollTo({
       top: 0,
@@ -45,13 +44,13 @@ const Product = () => {
 
   const handleAddToCart = () => {
     if (!size) {
-      toast.error('You have not chose the size');
+      toast.error('Please select a size');
       return;
     }
-    console.log("Thêm sản phẩm vào giỏ hàng với ID:", productData._id, "Size:", size, "ProductData:", productData);
+    console.log("Adding product to cart with ID:", productData._id, "Size:", size, "ProductData:", productData);
     
     if (!productData._id) {
-      toast.error('Undifined ID');
+      toast.error('Invalid product ID');
       return;
     }
     
@@ -61,7 +60,7 @@ const Product = () => {
   if (loading) {
     return (
       <div className='h-screen flex items-center justify-center'>
-        <p>Đang tải sản phẩm...</p>
+        <p>Loading product...</p>
       </div>
     );
   }
@@ -69,7 +68,7 @@ const Product = () => {
   if (!productData) {
     return (
       <div className='h-screen flex items-center justify-center'>
-        <p>Can not find any product. <button onClick={() => window.history.back()} className='text-blue-500 underline'>Quay lại</button></p>
+        <p>Can not find any product. <button onClick={() => window.history.back()} className='text-blue-500 underline'>Go Back</button></p>
       </div>
     );
   }
@@ -130,17 +129,17 @@ const Product = () => {
           </button>
           <hr className='mt-8 sm:w-4/5' />
           <div className='flex flex-col gap-1 mt-5 text-sm text-gray-500'>
-            <p>Sản phẩm chính hãng 100%.</p>
-            <p>Thanh toán khi nhận hàng.</p>
-            <p>Đổi trả dễ dàng trong vòng 7 ngày.</p>
+            <p>100% Authentic Products</p>
+            <p>Pay on Delivery Available</p>
+            <p>Easy 7-day Returns</p>
           </div>
         </div>
       </div>
       {/* Description and Reviews */}
       <div className='mt-20'>
         <div className='flex'>
-          <b className='border px-5 py-3 text-sm'>Mô tả</b>
-          <p className='border px-5 py-3 text-sm'>Đánh giá (122)</p>
+          <b className='border px-5 py-3 text-sm'>Description</b>
+          <p className='border px-5 py-3 text-sm'>Reviews (122)</p>
         </div>
         <div className='flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500'>
           <p>{productData.description}</p>

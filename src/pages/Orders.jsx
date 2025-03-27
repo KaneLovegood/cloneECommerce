@@ -22,7 +22,8 @@ const Orders = () => {
 
   useEffect(() => {
     if (!token) {
-      toast.error('Vui lòng đăng nhập để xem đơn hàng')
+      toast.error('Please login to view orders')
+      navigate('/login')
       return
     }
 
@@ -33,28 +34,33 @@ const Orders = () => {
     if (isAdmin) {
       fetchAdminStats()
     }
-  }, [token, isAdmin, backendUrl])
+  }, [token, isAdmin, backendUrl, navigate])
 
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      // Đối với admin, lấy tất cả đơn hàng
-      // Đối với user, lấy chỉ đơn hàng của họ
-      const endpoint = isAdmin ? 'api/order' : 'api/order/my-orders'
+      // For admin, get all orders
+      // For user, get only their orders
+      const endpoint = isAdmin ? 'api/order/all' : 'api/order/user-orders'
       const response = await axios.get(`${backendUrl}/${endpoint}`, {
         headers: { 
-          'Authorization': `Bearer ${token}`
+          token: token
         }
       })
 
       if (response.data.success) {
         setOrders(response.data.orders || [])
       } else {
-        toast.error(response.data.message || 'Không thể lấy đơn hàng')
+        toast.error(response.data.message || 'Could not fetch orders')
       }
     } catch (error) {
-      console.error('Lỗi khi lấy đơn hàng:', error)
-      toast.error('Có lỗi xảy ra khi lấy đơn hàng')
+      console.error('Error fetching orders:', error)
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again')
+        navigate('/login')
+      } else {
+        toast.error('An error occurred while fetching orders')
+      }
     } finally {
       setLoading(false)
     }
@@ -64,59 +70,75 @@ const Orders = () => {
     try {
       const response = await axios.get(`${backendUrl}/api/user/admin/stats`, {
         headers: { 
-          'Authorization': `Bearer ${token}`
+          token: token
         }
       })
 
       if (response.data.success) {
         setStats(response.data.stats)
       } else {
-        toast.error(response.data.message || 'Không thể lấy thống kê')
+        toast.error(response.data.message || 'Could not fetch statistics')
       }
     } catch (error) {
-      console.error('Lỗi khi lấy thống kê:', error)
+      console.error('Error fetching statistics:', error)
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again')
+        navigate('/login')
+      }
     }
   }
 
-  // Hàm để xuất đơn hàng dưới dạng JSON
+  // Function to export order as JSON
   const exportOrder = async (orderId) => {
     try {
       setExportLoading(true);
-      const response = await axios.get(`${backendUrl}/api/order/export/${orderId}`, {
-        headers: { 
-          'Authorization': `Bearer ${token}`
-        },
-        responseType: 'blob'
-      });
+      // Tìm order cần export
+      const order = orders.find(o => o._id === orderId);
+      if (!order) {
+        toast.error('Order not found');
+        return;
+      }
+
+      // Tạo dữ liệu để export
+      const exportData = {
+        orderId: order._id,
+        orderDate: order.orderDate,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        products: order.products,
+        address: order.address,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus
+      };
+
+      // Chuyển đổi thành JSON string
+      const jsonString = JSON.stringify(exportData, null, 2);
       
-      // Tạo đường dẫn URL tạm thời cho blob
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      
-      // Tạo thẻ a để tải xuống
+      // Tạo blob và download
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `order_${orderId}_${Date.now()}.json`);
       document.body.appendChild(link);
-      
-      // Kích hoạt tải xuống
       link.click();
       
-      // Dọn dẹp
+      // Cleanup
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
       
-      toast.success('Đã xuất đơn hàng thành công');
+      toast.success('Order exported successfully');
     } catch (error) {
-      console.error('Lỗi khi xuất đơn hàng:', error);
-      toast.error('Không thể xuất đơn hàng');
+      console.error('Error exporting order:', error);
+      toast.error('Could not export order');
     } finally {
       setExportLoading(false);
     }
   };
 
-  // Hàm để hủy đơn hàng
+  // Function to cancel order
   const cancelOrder = async (orderId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
+    if (!window.confirm('Are you sure you want to cancel this order?')) {
       return;
     }
     
@@ -126,21 +148,26 @@ const Orders = () => {
         { orderId }, 
         { 
           headers: { 
-            'Authorization': `Bearer ${token}`
+            token: token
           } 
         }
       );
       
       if (response.data.success) {
-        toast.success('Đơn hàng đã được hủy thành công');
-        // Cập nhật lại danh sách đơn hàng
+        toast.success('Order cancelled successfully');
+        // Refresh order list
         fetchOrders();
       } else {
-        toast.error(response.data.message || 'Không thể hủy đơn hàng');
+        toast.error(response.data.message || 'Could not cancel order');
       }
     } catch (error) {
-      console.error('Lỗi khi hủy đơn hàng:', error);
-      toast.error('Có lỗi xảy ra khi hủy đơn hàng');
+      console.error('Error cancelling order:', error);
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please login again')
+        navigate('/login')
+      } else {
+        toast.error('An error occurred while cancelling order');
+      }
     } finally {
       setCancelLoading(null);
     }
@@ -153,19 +180,19 @@ const Orders = () => {
         className={`py-2 px-4 ${selectedTab === 'orders' ? 'border-b-2 border-purple-500 font-bold' : ''}`}
         onClick={() => setSelectedTab('orders')}
       >
-        Quản lý đơn hàng
+        Order Management
       </button>
       <button 
         className={`py-2 px-4 ${selectedTab === 'stats' ? 'border-b-2 border-purple-500 font-bold' : ''}`}
         onClick={() => setSelectedTab('stats')}
       >
-        Thống kê
+        Statistics
       </button>
       <button 
         className={`py-2 px-4 ${selectedTab === 'products' ? 'border-b-2 border-purple-500 font-bold' : ''}`}
         onClick={() => setSelectedTab('products')}
       >
-        Quản lý sản phẩm
+        Product Management
       </button>
     </div>
   )
@@ -175,19 +202,19 @@ const Orders = () => {
       {stats ? (
         <>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500">Tổng sản phẩm</h3>
+            <h3 className="text-gray-500">Total Products</h3>
             <p className="text-2xl font-bold">{stats.totalProducts}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500">Tổng đơn hàng</h3>
+            <h3 className="text-gray-500">Total Orders</h3>
             <p className="text-2xl font-bold">{stats.totalOrders}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500">Doanh thu</h3>
+            <h3 className="text-gray-500">Revenue</h3>
             <p className="text-2xl font-bold">${stats.totalRevenue}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500">Đơn chờ xử lý</h3>
+            <h3 className="text-gray-500">Pending Orders</h3>
             <p className="text-2xl font-bold">{stats.pendingOrders}</p>
           </div>
         </>
@@ -217,13 +244,13 @@ const Orders = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Đang xử lý':
+      case 'Processing':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Đang giao hàng':
+      case 'Shipping':
         return 'bg-blue-100 text-blue-800';
-      case 'Đã giao hàng':
+      case 'Delivered':
         return 'bg-green-100 text-green-800';
-      case 'Đã hủy':
+      case 'Cancelled':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
@@ -233,7 +260,7 @@ const Orders = () => {
   return (
     <div className="min-h-[80vh] py-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">{isAdmin ? 'Quản lý' : 'Đơn hàng của bạn'}</h1>
+        <h1 className="text-3xl font-bold mb-8">{isAdmin ? 'Management' : 'Your Orders'}</h1>
         
         {/* Admin sections */}
         {isAdmin && (
@@ -248,18 +275,18 @@ const Orders = () => {
         {selectedTab === 'orders' && (
           <>
             {loading ? (
-              <p className="text-center py-8">Đang tải...</p>
+              <p className="text-center py-8">Loading...</p>
             ) : orders.length > 0 ? (
               <div className="bg-white rounded-lg shadow overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã đơn</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tổng tiền</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                      {isAdmin && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Khách hàng</th>}
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      {isAdmin && <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>}
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -267,7 +294,7 @@ const Orders = () => {
                       <tr key={order._id}>
                         <td className="px-6 py-4 whitespace-nowrap">#{order._id.slice(-6)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">{formatDate(order.orderDate)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">{Number(order.totalAmount).toLocaleString()} VND</td>
+                        <td className="px-6 py-4 whitespace-nowrap">${Number(order.totalAmount).toLocaleString()}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
                             {order.status}
@@ -279,14 +306,14 @@ const Orders = () => {
                             className="text-indigo-600 hover:text-indigo-900"
                             onClick={() => navigate(`/order-detail/${order._id}`)}
                           >
-                            Xem
+                            View
                           </button>
                           
                           <button 
                             className="text-blue-600 hover:text-blue-800 flex items-center"
                             onClick={() => exportOrder(order._id)}
                             disabled={exportLoading}
-                            title="Xuất đơn hàng"
+                            title="Export Order"
                           >
                             {exportLoading ? (
                               <div className="animate-spin h-4 w-4 border-t-2 border-blue-500 rounded-full"></div>
@@ -297,7 +324,7 @@ const Orders = () => {
                             )}
                           </button>
                           
-                          {order.status === 'Đang xử lý' && (
+                          {order.status === 'Processing' && (
                             <button 
                               className="text-red-600 hover:text-red-900 flex items-center"
                               onClick={() => cancelOrder(order._id)}
@@ -305,7 +332,7 @@ const Orders = () => {
                             >
                               {cancelLoading === order._id ? (
                                 <div className="animate-spin h-4 w-4 border-t-2 border-red-500 rounded-full"></div>
-                              ) : 'Hủy'}
+                              ) : 'Cancel'}
                             </button>
                           )}
                         </td>
@@ -316,10 +343,10 @@ const Orders = () => {
               </div>
             ) : (
               <div className="text-center py-8 bg-white rounded-lg shadow">
-                <p className="text-gray-500">Bạn chưa có đơn hàng nào.</p>
+                <p className="text-gray-500">You have no orders yet.</p>
                 {!isAdmin && (
                   <button onClick={handleShopping} className="mt-4 bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
-                    Mua sắm ngay
+                    Shop Now
                   </button>
                 )}
               </div>

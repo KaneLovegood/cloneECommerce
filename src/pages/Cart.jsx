@@ -14,9 +14,9 @@ const Cart = () => {
     console.log("CartItems:", cartItems);
     console.log("Products:", products);
     
-    // Nếu không có giỏ hàng, không cần xử lý
+    // If no cart, no need to process
     if (!cartItems || Object.keys(cartItems).length === 0) {
-      console.log("Giỏ hàng trống");
+      console.log("Cart is empty");
       setCartData([]);
       setIsLoading(false);
       return;
@@ -39,17 +39,17 @@ const Cart = () => {
       }
     }
     
-    console.log("CartData đã chuẩn bị:", tempData);
+    console.log("Cart data prepared:", tempData);
     setCartData(tempData);
     setIsLoading(false);
   },[cartItems, products]);
   
   const handleRemoveItem = (itemId, size) => {
     updateQuantity(itemId, size, 0);
-    toast.success('Đã xóa sản phẩm');
+    toast.success('Product removed');
   }
   
-  // Hàm để xóa toàn bộ giỏ hàng
+  // Function to clear entire cart
   const clearCart = () => {
     localStorage.removeItem('cartItems');
     setCartData([]);
@@ -59,7 +59,7 @@ const Cart = () => {
   if (isLoading) {
     return (
       <div className='border-t pt-14 text-center'>
-        <p>Đang tải...</p>
+        <p>Loading...</p>
       </div>
     );
   }
@@ -67,13 +67,13 @@ const Cart = () => {
   return (
     <div className='border-t pt-14'>
       <div className='text-2xl mb-3 flex justify-between items-center'>
-        <Title text1={'Giỏ'} text2={'hàng'}/>
+        <Title text1={'Shopping'} text2={'Cart'}/>
         {cartData.length > 0 && (
           <button 
             onClick={clearCart} 
             className='text-sm text-red-500 border border-red-500 px-3 py-1 rounded hover:bg-red-50'
           >
-            Xóa tất cả
+            Clear All
           </button>
         )}
       </div>
@@ -89,7 +89,7 @@ const Cart = () => {
                     <img src={productData.image[0]} alt={productData.name} className='w-16 sm:w-20'/>
                   ) : (
                     <div className='w-16 sm:w-20 h-20 bg-gray-200 flex items-center justify-center'>
-                      <span className='text-xs text-gray-500'>Không có ảnh</span>
+                      <span className='text-xs text-gray-500'>No image</span>
                     </div>
                   )}
                   <div>
@@ -116,15 +116,15 @@ const Cart = () => {
                   onClick={() => handleRemoveItem(item._id, item.size)} 
                   className='w-4 mr-4 sm:w-5 cursor-pointer' 
                   src={assets.bin_icon} 
-                  alt="Xóa" 
+                  alt="Remove" 
                 />
               </div>
             );
           })
         ) : (
           <div className='text-center py-8'>
-            <p className='text-gray-500'>Giỏ hàng trống</p>
-            <button onClick={() => navigate('/')} className='mt-4 bg-black text-white px-4 py-2'>Tiếp tục mua sắm</button>
+            <p className='text-gray-500'>Cart is empty</p>
+            <button onClick={() => navigate('/')} className='mt-4 bg-black text-white px-4 py-2'>Continue Shopping</button>
           </div>
         )}
       </div>
@@ -133,7 +133,7 @@ const Cart = () => {
           <div className='w-full sm:w-[450px]'>
             <CartTotal/>
             <div className='w-full text-end'>
-              <button onClick={() => navigate('/place-order')} className='bg-black text-white text-sm my-8 px-8 py-3'>Đặt hàng</button>
+              <button onClick={() => navigate('/place-order')} className='bg-black text-white text-sm my-8 px-8 py-3'>Place Order</button>
             </div>
           </div>
         </div>
