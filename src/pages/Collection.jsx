@@ -1,15 +1,15 @@
 import { useContext, useEffect, useState } from "react";
 import { assets } from "../assets/assets";
 import { ProductItem, Title } from "../components";
-
 import { ShopContext } from "./../context/ShopContext";
 
 const Collection = () => {
-  const { products, search, showSearch } = useContext(ShopContext);
+  const { products, search, showSearch, loading, error, refreshProducts } = useContext(ShopContext);
   const [showFilter, setShowFilter] = useState(false);
   const [filterProducts, setFilterProducts] = useState([]);
   const [category, setCategory] = useState([]);
   const [subCategory, setSubCategory] = useState([]);
+  const [sortType, setSortType] = useState('relevant');
 
   const toggleCategory = (e) => {
     if (category.includes(e.target.value)) {
@@ -18,6 +18,7 @@ const Collection = () => {
       setCategory((prev) => [...prev, e.target.value]);
     }
   };
+
   const toggleSubCategory = (e) => {
     if (subCategory.includes(e.target.value)) {
       setSubCategory((prev) => prev.filter((item) => item !== e.target.value));
@@ -28,47 +29,46 @@ const Collection = () => {
 
   const applyFilter = () => {
     let productsCopy = products.slice();
+    
+    // Lọc theo danh mục
     if (category.length > 0) {
       productsCopy = productsCopy.filter((item) =>
         category.includes(item.category)
       );
     }
 
+    // Lọc theo danh mục con
     if (subCategory.length > 0) {
       productsCopy = productsCopy.filter((item) =>
         subCategory.includes(item.subCategory)
       );
     }
 
-    if(showSearch && search){
-      productsCopy = productsCopy.filter(item => item.name.toLowerCase().includes(search.toLowerCase()))
+    // Lọc theo tìm kiếm
+    if (showSearch && search) {
+      productsCopy = productsCopy.filter(item => 
+        item.name.toLowerCase().includes(search.toLowerCase())
+      );
     }
+
+    // Sắp xếp sản phẩm
+    switch (sortType) {
+      case "low-high":
+        productsCopy.sort((a, b) => a.price - b.price);
+        break;
+      case "high-low":
+        productsCopy.sort((a, b) => b.price - a.price);
+        break;
+      default:
+        break;
+    }
+
     setFilterProducts(productsCopy);
   };
 
   useEffect(() => {
     applyFilter();
-  }, [category, subCategory, search, showSearch]);
-
-  const[sortType, setSortType] = useState('relavent')
-
-  const sortProduct = () => {
-    let fpCopy = filterProducts.slice();
-    switch (sortType) {
-      case "low-high":
-        setFilterProducts(fpCopy.sort((a, b) => a.price - b.price));
-        break;
-      case "high-low":
-        setFilterProducts(fpCopy.sort((a, b) => b.price - a.price));
-        break;
-      default:
-        applyFilter();
-    }
-  };
-
-  useEffect(()=>{
-    sortProduct()
-  }, [sortType])
+  }, [category, subCategory, search, showSearch, sortType, products]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
@@ -78,117 +78,149 @@ const Collection = () => {
           onClick={() => setShowFilter(!showFilter)}
           className="my-2 text-xl flex items-center cursor-pointer gap-2"
         >
-          FILTERS
+          BỘ LỌC
         </p>
         <img
-          className={`h-3  sm:hidden ${showFilter ? "rotate-90" : ""}`}
+          className={`h-3 sm:hidden ${showFilter ? "rotate-90" : ""}`}
           src={assets.dropdown_icon}
-        ></img>
+          alt="dropdown"
+        />
+        
         {/* Category Filter */}
         <div
           className={`border border-gray-300 pl-5 py-3 mt-6 ${
             showFilter ? "" : "hidden"
           } sm:block`}
         >
-          <p className="mb-3 text-sm font-medium">CATEGORIES</p>
+          <p className="mb-3 text-sm font-medium">DANH MỤC</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
             <p className="flex gap-2">
               <input
                 className="w-3"
                 type="checkbox"
-                value={"Men"}
+                value="Men"
                 onChange={toggleCategory}
-              ></input>
-              Men
+              />
+              Nam
             </p>
-
             <p className="flex gap-2">
               <input
                 className="w-3"
                 type="checkbox"
-                value={"Women"}
+                value="Women"
                 onChange={toggleCategory}
-              ></input>
-              Women
+              />
+              Nữ
             </p>
-
             <p className="flex gap-2">
               <input
                 className="w-3"
                 type="checkbox"
-                value={"Kids"}
+                value="Kids"
                 onChange={toggleCategory}
-              ></input>
-              Kids
+              />
+              Trẻ em
             </p>
           </div>
         </div>
+
         {/* SubCategory Filter */}
         <div
           className={`border border-gray-300 pl-5 py-3 my-5 ${
             showFilter ? "" : "hidden"
           } sm:block`}
         >
-          <p className="mb-3 text-sm font-medium">TYPE</p>
+          <p className="mb-3 text-sm font-medium">LOẠI SẢN PHẨM</p>
           <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
             <p className="flex gap-2">
               <input
                 className="w-3"
                 type="checkbox"
-                value={"Topwear"}
+                value="Topwear"
                 onChange={toggleSubCategory}
-              ></input>
-              Topwear
+              />
+              Áo
             </p>
-
             <p className="flex gap-2">
               <input
                 className="w-3"
                 type="checkbox"
-                value={"Bottomwear"}
+                value="Bottomwear"
                 onChange={toggleSubCategory}
-              ></input>
-              Bottomwear
+              />
+              Quần
             </p>
-
             <p className="flex gap-2">
               <input
                 className="w-3"
                 type="checkbox"
-                value={"Winterwear"}
+                value="Winterwear"
                 onChange={toggleSubCategory}
-              ></input>
-              Winterwear
+              />
+              Đồ mùa đông
             </p>
           </div>
         </div>
       </div>
+
       {/* Right side */}
       <div className="flex-1">
         <div className="flex justify-between text-base sm:text-2xl mb-4">
-          <Title text1={"ALL"} text2={"COLLECTIONS"}></Title>
+          <Title text1={"TẤT CẢ"} text2={"SẢN PHẨM"} />
 
           {/* Product Sort */}
-          <select onChange={(e) => setSortType(e.target.value)} className="border-2 border-gray-300 text-sm px-2">
-            <option  value="relavent">Sort by: relavent</option>
-            <option value="low-high">Sort by: low-high</option>
-            <option value="high-low">Sort by: high-low</option>
+          <select 
+            onChange={(e) => setSortType(e.target.value)} 
+            className="border-2 border-gray-300 text-sm px-2"
+            value={sortType}
+          >
+            <option value="relevant">Sắp xếp: Phù hợp nhất</option>
+            <option value="low-high">Sắp xếp: Giá thấp đến cao</option>
+            <option value="high-low">Sắp xếp: Giá cao đến thấp</option>
           </select>
         </div>
-        {/* Map products */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
-          {filterProducts.map((item, index) => {
-            return (
-              <ProductItem
-                key={index}
-                name={item.name}
-                id={item._id}
-                price={item.price}
-                image={item.image}
-              />
-            );
-          })}
-        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-10">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Đang tải...</span>
+            </div>
+            <p className="mt-2">Đang tải sản phẩm...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="text-center py-10 text-red-500">
+            <p className="mb-2">Có lỗi xảy ra khi tải sản phẩm:</p>
+            <p>{error}</p>
+            <button 
+              onClick={refreshProducts}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Thử lại
+            </button>
+          </div>
+        )}
+
+        {/* Products Grid */}
+        {!loading && !error && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6">
+            {filterProducts.length === 0 ? (
+              <div className="col-span-full text-center py-10">
+                <p>Không tìm thấy sản phẩm phù hợp</p>
+              </div>
+            ) : (
+              filterProducts.map((item) => (
+                <ProductItem
+                  key={item._id}
+                  data={item}
+                />
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

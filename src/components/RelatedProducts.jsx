@@ -1,8 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react'
-import { ShopContext } from '../context/ShopContext';
+import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Title from './Title';
+import { ShopContext } from '../context/ShopContext';
 import ProductItem from './ProductItem';
+import Title from './Title';
 
 const RelatedProducts = ({category, subCategory}) => {
     const {products} = useContext(ShopContext);
@@ -49,11 +49,8 @@ const RelatedProducts = ({category, subCategory}) => {
             <div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
                 {related.map((item, index) => (
                     <ProductItem 
-                        key={index} 
-                        id={item._id} 
-                        name={item.name} 
-                        price={item.price} 
-                        image={item.image && item.image.length > 0 ? item.image[0] : ""}
+                        key={index}
+                        data={item}
                     />
                 ))}
             </div>

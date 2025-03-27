@@ -22,42 +22,19 @@ const Cart = () => {
       return;
     }
     
-    // Kết hợp sản phẩm từ API và mock data
-    const allProducts = [...products];
-    console.log("Tất cả sản phẩm (API):", allProducts);
-    
-    if (!allProducts || allProducts.length === 0) {
-      console.log("Không có dữ liệu sản phẩm");
-      setIsLoading(false);
-      return;
-    }
-    
     const tempData = [];
     for(const itemId in cartItems){
-      for(const size in cartItems[itemId]){
-        if(cartItems[itemId][size] > 0){
-          // Tìm thông tin sản phẩm từ ID
-          let product = allProducts.find(p => p._id?.toString() === itemId?.toString());
-          
-          if (!product) {
-            console.log(`Không tìm thấy sản phẩm với ID: ${itemId} trong cả API`);
-            // Tạo sản phẩm ảo nếu không tìm thấy
-            product = {
+      const item = cartItems[itemId];
+      if (item && item.sizes) {
+        for(const size in item.sizes){
+          if(item.sizes[size] > 0){
+            tempData.push({
               _id: itemId,
-              name: `Sản phẩm #${itemId}`,
-              price: 0,
-              image: []
-            };
+              size: size,
+              quantity: item.sizes[size],
+              product: item.product
+            });
           }
-          
-          console.log(`Sản phẩm tìm thấy cho ID ${itemId}:`, product);
-          
-          tempData.push({
-            _id: itemId,
-            size: size,
-            quantity: cartItems[itemId][size],
-            product: product
-          });
         }
       }
     }
@@ -69,7 +46,7 @@ const Cart = () => {
   
   const handleRemoveItem = (itemId, size) => {
     updateQuantity(itemId, size, 0);
-    toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
+    toast.success('Đã xóa sản phẩm');
   }
   
   // Hàm để xóa toàn bộ giỏ hàng
@@ -79,15 +56,10 @@ const Cart = () => {
     window.location.reload();
   }
   
-  // Tìm sản phẩm theo ID
-  const findProduct = (productId) => {
-    return products.find(p => p._id === productId);
-  };
-  
   if (isLoading) {
     return (
       <div className='border-t pt-14 text-center'>
-        <p>loading...</p>
+        <p>Đang tải...</p>
       </div>
     );
   }
@@ -95,7 +67,7 @@ const Cart = () => {
   return (
     <div className='border-t pt-14'>
       <div className='text-2xl mb-3 flex justify-between items-center'>
-        <Title text1={'Your'} text2={'Cart'}/>
+        <Title text1={'Giỏ'} text2={'hàng'}/>
         {cartData.length > 0 && (
           <button 
             onClick={clearCart} 
@@ -117,7 +89,7 @@ const Cart = () => {
                     <img src={productData.image[0]} alt={productData.name} className='w-16 sm:w-20'/>
                   ) : (
                     <div className='w-16 sm:w-20 h-20 bg-gray-200 flex items-center justify-center'>
-                      <span className='text-xs text-gray-500'>No Image</span>
+                      <span className='text-xs text-gray-500'>Không có ảnh</span>
                     </div>
                   )}
                   <div>
@@ -151,8 +123,8 @@ const Cart = () => {
           })
         ) : (
           <div className='text-center py-8'>
-            <p className='text-gray-500'>Empty cart</p>
-            <button onClick={() => navigate('/')} className='mt-4 bg-black text-white px-4 py-2'>Continue to shopping</button>
+            <p className='text-gray-500'>Giỏ hàng trống</p>
+            <button onClick={() => navigate('/')} className='mt-4 bg-black text-white px-4 py-2'>Tiếp tục mua sắm</button>
           </div>
         )}
       </div>
@@ -161,7 +133,7 @@ const Cart = () => {
           <div className='w-full sm:w-[450px]'>
             <CartTotal/>
             <div className='w-full text-end'>
-              <button onClick={() => navigate('/place-order')} className='bg-black text-white text-sm my-8 px-8 py-3'>Purchase</button>
+              <button onClick={() => navigate('/place-order')} className='bg-black text-white text-sm my-8 px-8 py-3'>Đặt hàng</button>
             </div>
           </div>
         </div>

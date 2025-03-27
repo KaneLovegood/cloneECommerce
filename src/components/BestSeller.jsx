@@ -16,7 +16,7 @@ const BestSeller = () => {
 
     return (
         <div className='my-10'>
-            <Title>Best Seller</Title>
+            <Title text1={"Best"} text2={"Seller"}></Title>
             {loading && <p className="text-center py-4">Đang tải sản phẩm...</p>}
             {error && <p className="text-center py-4 text-red-500">{error}</p>}
             {!loading && bestSeller.length === 0 && (

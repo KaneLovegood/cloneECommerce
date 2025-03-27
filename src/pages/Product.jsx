@@ -6,9 +6,9 @@ import RelatedProducts from '../components/RelatedProducts';
 import { ShopContext } from '../context/ShopContext';
 
 const Product = () => {
-  const params = useParams();
-  const productId = params.productId || "";
-  console.log('Params chi tiết:', params);
+  const {productId} = useParams();
+  
+  console.log('Params chi tiết:', productId);
   
   const {products, currency, addToCart, loading} = useContext(ShopContext);
   const [productData, setProductData] = useState(null);
@@ -17,14 +17,14 @@ const Product = () => {
 
   // Thêm console.log để debug routing
   console.log('Current URL:', window.location.pathname);
-  console.log('Route params:', params, 'ProductID:', productId);
+  console.log( 'ProductID:', productId);
 
   const findProduct = () => {
-    if(!productId) return;
+
     // Tìm sản phẩm theo ID sử dụng chỉ danh sách sản phẩm thật
-    const foundProduct = products.find((item) => item._id === productId || item._id === Number(productId));
+    const foundProduct = products.find((item) => item._id === productId );
       
-    setProductData(foundProduct || null);
+    setProductData(foundProduct);
     
     if(foundProduct && foundProduct.image) {
       setImage(foundProduct.image[0]);
@@ -45,13 +45,13 @@ const Product = () => {
 
   const handleAddToCart = () => {
     if (!size) {
-      toast.error('Vui lòng chọn kích thước');
+      toast.error('You have not chose the size');
       return;
     }
     console.log("Thêm sản phẩm vào giỏ hàng với ID:", productData._id, "Size:", size, "ProductData:", productData);
     
     if (!productData._id) {
-      toast.error('Không thể thêm sản phẩm vào giỏ hàng - ID không hợp lệ');
+      toast.error('Undifined ID');
       return;
     }
     
@@ -69,7 +69,7 @@ const Product = () => {
   if (!productData) {
     return (
       <div className='h-screen flex items-center justify-center'>
-        <p>Không tìm thấy sản phẩm. <button onClick={() => window.history.back()} className='text-blue-500 underline'>Quay lại</button></p>
+        <p>Can not find any product. <button onClick={() => window.history.back()} className='text-blue-500 underline'>Quay lại</button></p>
       </div>
     );
   }
@@ -109,7 +109,7 @@ const Product = () => {
           <p className='mt-5 text-3xl font-medium'>{currency}{productData.price}</p>
           <p className='mt-5 md:w-4/5 text-gray-500'>{productData.description}</p>
           <div className='flex flex-col gap-4 my-8'>
-            <p>Chọn kích thước</p>
+            <p>Choose size</p>
             <div className='flex gap-2'>
               {productData.sizes && productData.sizes.map((item,index) => (
                 <button 
@@ -126,7 +126,7 @@ const Product = () => {
             onClick={handleAddToCart} 
             className='bg-black text-white py-3 px-8 text-sm active:bg-gray-700'
           >
-            Thêm vào giỏ hàng
+            Add to cart
           </button>
           <hr className='mt-8 sm:w-4/5' />
           <div className='flex flex-col gap-1 mt-5 text-sm text-gray-500'>
