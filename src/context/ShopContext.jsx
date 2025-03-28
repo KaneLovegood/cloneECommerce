@@ -3,108 +3,57 @@ import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-export const ShopContext = createContext();
+export const ShopContext = createContext(null);
 
-const ShopContextProvider = (props) => {
+const ShopContextProvider = ({ children }) => {
   const currency = "$";
   const delivery_fee = 10;
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4001";
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
   const [search, setSearch] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [cartItems, setCartItems] = useState({});
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const navigate = useNavigate();
 
-  const getProductsData = async () => {
-    setLoading(true);
-    setError(null);
-    
+  const getProductsData = async (params = {}) => {
     try {
-      const apiUrl = `${backendUrl}/api/products/list`;
-      console.log("Calling API with URL:", apiUrl);
+      setLoading(true);
+      setError(null);
       
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.append('page', params.page);
+      if (params.limit) queryParams.append('limit', params.limit);
+      if (params.search) queryParams.append('search', params.search);
+      if (params.category?.length) queryParams.append('category', params.category.join(','));
+      if (params.subCategory?.length) queryParams.append('subCategory', params.subCategory.join(','));
+      if (params.sortType) queryParams.append('sortType', params.sortType);
+
+      const apiUrl = `${backendUrl}/api/products/list?${queryParams.toString()}`;
       const response = await axios.get(apiUrl);
-      console.log("Full response:", response);
-      
-      if (!response || !response.data) {
-        console.error("Response has no data:", response);
-        setError("No data received from server");
-        toast.error("No data received from server");
-        setProducts([]);
-        return;
-      }
-      
-      console.log("Data from API:", response.data);
-      
-      if (response.data.success === true) {
-        if (Array.isArray(response.data.products)) {
-          console.log("Product list:", response.data.products);
-          
-          const processedProducts = response.data.products.map(product => {
-            if (!product) return null;
-            
-            const processedProduct = { ...product };
-            
-            // If no _id, use product name as ID
-            if (!processedProduct._id) {
-              processedProduct._id = processedProduct.name.toLowerCase().replace(/\s+/g, '-');
-            }
-            
-            // Ensure image is an array
-            if (!processedProduct.image) {
-              processedProduct.image = [];
-            } else if (!Array.isArray(processedProduct.image)) {
-              processedProduct.image = [processedProduct.image];
-            }
-            
-            // Ensure sizes is an array
-            if (!processedProduct.sizes) {
-              processedProduct.sizes = ["S", "M", "L", "XL"];
-            } else if (!Array.isArray(processedProduct.sizes)) {
-              processedProduct.sizes = [processedProduct.sizes];
-            }
-            
-            return processedProduct;
-          })
-          .filter(product => product !== null);
-          
-          console.log("Processed product list:", processedProducts);
-          setProducts(processedProducts);
-        } else {
-          console.error("products is not an array:", response.data.products);
-          setError("Invalid product data");
-          toast.error("Invalid product data");
-          setProducts([]);
-        }
+
+      if (response.data.success) {
+        setProducts(response.data.products);
+        setTotalPages(response.data.totalPages);
+        setTotalProducts(response.data.totalProducts);
+        setHasNextPage(response.data.hasNextPage);
+        console.log(`📦 Loaded ${response.data.products.length} products for page ${response.data.currentPage}`);
+        console.log(`📊 Total pages: ${response.data.totalPages}, Total products: ${response.data.totalProducts}`);
       } else {
-        console.error("API returned error:", response.data);
-        setError(response.data.message || "Could not fetch product data");
-        toast.error(response.data.message || "Could not fetch product data");
-        setProducts([]);
+        console.error("❌ API Error:", response.data.message);
+        setError(response.data.message);
       }
     } catch (error) {
-      console.error("Error calling API:", error);
-      
-      if (error.response) {
-        console.error("Response error:", error.response.data);
-        console.error("Status code:", error.response.status);
-        setError(`Server error: ${error.response.status} - ${error.response.data?.message || "Unknown error"}`);
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        setError("Could not connect to server. Please check your connection.");
-      } else {
-        console.error("Error:", error.message);
-        setError(`Error: ${error.message}`);
-      }
-      
-      toast.error("Error connecting to server");
-      setProducts([]);
+      console.error("❌ Request Error:", error);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   // Function to get real product ID from database when creating order
   const getRealProductId = async (productName) => {
@@ -122,7 +71,10 @@ const ShopContextProvider = (props) => {
 
   // useEffect để load sản phẩm và giỏ hàng ban đầu
   useEffect(() => {
-    getProductsData();
+    getProductsData({
+      page: 1,
+      limit: 12
+    });
   }, []); // Chỉ chạy 1 lần khi component mount
 
   // useEffect riêng để xử lý giỏ hàng khi products thay đổi
@@ -315,7 +267,7 @@ const ShopContextProvider = (props) => {
     return totalAmount;
   }
 
-  const value = {
+  const contextValue = {
     products,
     currency,
     delivery_fee,
@@ -326,7 +278,10 @@ const ShopContextProvider = (props) => {
     backendUrl,
     loading,
     error,
-    refreshProducts: getProductsData,
+    totalPages,
+    totalProducts,
+    hasNextPage,
+    getProductsData,
     cartItems,
     addToCart,
     getCartCount,
@@ -337,7 +292,9 @@ const ShopContextProvider = (props) => {
   };
   
   return (
-    <ShopContext.Provider value={value}>{props.children}</ShopContext.Provider>
+    <ShopContext.Provider value={contextValue}>
+      {children}
+    </ShopContext.Provider>
   );
 };
 

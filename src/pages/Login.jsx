@@ -37,6 +37,8 @@ const Login = () => {
       if (response.data.success) {
         const token = response.data.token
         localStorage.setItem('token', token)
+        // Dispatch authChange event to notify Navbar
+        window.dispatchEvent(new Event('authChange'))
         toast.success('Login successful!')
         navigate('/orders')
       } else {
@@ -88,6 +90,8 @@ const Login = () => {
         const token = response.data.token
         if (token) {
           localStorage.setItem('token', token)
+          // Dispatch authChange event to notify Navbar
+          window.dispatchEvent(new Event('authChange'))
           navigate('/orders')
         } else {
           setIsRegister(false) // Switch to login form

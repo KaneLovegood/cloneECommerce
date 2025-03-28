@@ -10,8 +10,7 @@ export const ProductItem = ({ data }) => {
   // Destructure các thuộc tính từ data
   const { _id, image, name, price } = data || {};
   
-  console.log("ProductItem - Data:", data);
-  console.log("ProductItem - ID:", _id , "Type:", typeof (_id ), "Name:", name);
+
   
   // Sử dụng _id nếu có, không thì dùng id
   
