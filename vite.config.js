@@ -5,22 +5,7 @@ const react = require('@vitejs/plugin-react')
 module.exports = defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist',
-    cssCodeSplit: false,
-    cssMinify: 'lightningcss',
-    rollupOptions: {
-      output: {
-        manualChunks: undefined
-      }
-    }
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom']
-  },
-  css: {
-    postcss: {
-      plugins: []
-    }
+    outDir: 'dist'
   },
   server: {
     port: 5175
