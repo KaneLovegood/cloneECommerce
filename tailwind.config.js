@@ -1,8 +1,2 @@
- /** @type {import('tailwindcss').Config} */
- export default {
-  content: ["./src/**/*.{html,js}"],
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-}
+// Chỉ để trống, không sử dụng
+export default {}
