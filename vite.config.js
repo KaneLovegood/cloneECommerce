@@ -6,6 +6,7 @@ module.exports = defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    cssCodeSplit: false,
     cssMinify: 'lightningcss',
     rollupOptions: {
       output: {
@@ -15,6 +16,11 @@ module.exports = defineConfig({
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom']
+  },
+  css: {
+    postcss: {
+      plugins: []
+    }
   },
   server: {
     port: 5175
