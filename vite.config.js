@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    cssMinify: 'lightningcss',
     rollupOptions: {
       output: {
         manualChunks: undefined
