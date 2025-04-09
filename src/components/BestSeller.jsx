@@ -17,10 +17,10 @@ const BestSeller = () => {
     return (
         <div className='my-10text-center py-8 text-3xl'>
             <Title text1={"Best"} text2={"Seller"}></Title>
-            {loading && <p className="text-center py-4">Đang tải sản phẩm...</p>}
+            {loading && <p className="text-center py-4">Loading...</p>}
             {error && <p className="text-center py-4 text-red-500">{error}</p>}
             {!loading && bestSeller.length === 0 && (
-                <p className="text-center py-4">Không có sản phẩm</p>
+                <p className="text-center py-4">Can not find any products</p>
             )}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
